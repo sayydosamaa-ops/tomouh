@@ -397,6 +397,116 @@ select{
 @media(prefers-reduced-motion:reduce){
   .plane-svg,.c1,.c2,.c3,.p,.spinner{animation:none}
 }
+
+/* ====== DUPLICATE CARD ====== */
+.duplicate-card{display:none;text-align:center;padding:12px 0}
+.duplicate-card.on{display:block}
+.duplicate-icon{font-size:48px;margin-bottom:14px}
+.duplicate-title{font-size:18px;font-weight:800;color:var(--navy);margin-bottom:8px}
+.duplicate-text{font-size:13.5px;color:var(--muted);line-height:1.7;margin-bottom:20px}
+
+/* ====== ASSISTANT BUTTON ====== */
+.ai-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:14px;margin-top:12px;
+  background:linear-gradient(135deg,var(--navy),var(--navy2));
+  color:#fff;border:none;border-radius:14px;
+  font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;text-decoration:none;
+  box-shadow:0 6px 18px rgba(15,42,69,.25);
+  transition:transform .2s,box-shadow .2s;
+}
+.ai-btn:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(15,42,69,.3)}
+
+/* ====== CHAT MODAL ====== */
+.chat-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,.5);
+  display:none;align-items:flex-end;justify-content:center;
+  padding:0;
+}
+.chat-overlay.open{display:flex}
+@media(min-width:600px){
+  .chat-overlay{align-items:center}
+}
+.chat-modal{
+  width:100%;max-width:480px;height:90dvh;max-height:680px;
+  background:#fff;border-radius:24px 24px 0 0;
+  display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 -8px 40px rgba(0,0,0,.2);
+  animation:slideUp .3s cubic-bezier(.25,.46,.45,.94);
+}
+@media(min-width:600px){
+  .chat-modal{border-radius:24px;height:80dvh}
+}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+.chat-header{
+  background:linear-gradient(135deg,var(--navy),var(--navy2));
+  padding:16px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;
+}
+.chat-header-icon{font-size:24px}
+.chat-header-info{flex:1}
+.chat-header-title{color:#fff;font-size:15px;font-weight:800}
+.chat-header-sub{color:rgba(255,255,255,.65);font-size:11px;font-weight:400}
+.chat-header-actions{display:flex;gap:8px}
+.chat-icon-btn{
+  width:34px;height:34px;border-radius:10px;border:none;
+  background:rgba(255,255,255,.15);color:#fff;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:14px;transition:background .2s;
+}
+.chat-icon-btn:hover{background:rgba(255,255,255,.25)}
+.chat-messages{
+  flex:1;overflow-y:auto;padding:16px;
+  display:flex;flex-direction:column;gap:12px;
+  background:#F8FAFC;
+}
+.chat-msg{display:flex}
+.chat-user{justify-content:flex-start}
+.chat-bot{justify-content:flex-end}
+.chat-bubble{
+  max-width:78%;padding:10px 14px;border-radius:16px;
+  font-size:13.5px;line-height:1.6;font-family:'Cairo',sans-serif;
+}
+.chat-user .chat-bubble{
+  background:#fff;color:var(--text);
+  border:1px solid var(--border);
+  border-radius:16px 16px 16px 4px;
+}
+.chat-bot .chat-bubble{
+  background:linear-gradient(135deg,var(--navy),var(--navy2));
+  color:#fff;border-radius:16px 16px 4px 16px;
+}
+.typing-dots{display:flex;gap:5px;align-items:center;padding:12px 16px!important}
+.typing-dots span{
+  width:7px;height:7px;border-radius:50%;
+  background:rgba(255,255,255,.7);
+  animation:typingDot 1.2s infinite;
+}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes typingDot{0%,80%,100%{transform:scale(1);opacity:.5}40%{transform:scale(1.3);opacity:1}}
+.chat-input-area{
+  padding:12px 16px;background:#fff;
+  border-top:1px solid var(--border);
+  display:flex;gap:10px;align-items:flex-end;flex-shrink:0;
+}
+.chat-input-area textarea{
+  flex:1;border:1.5px solid var(--border);border-radius:14px;
+  padding:10px 14px;font-family:'Cairo',sans-serif;font-size:13.5px;
+  direction:rtl;resize:none;outline:none;max-height:100px;
+  background:#FAFBFC;color:var(--text);line-height:1.5;
+  transition:border-color .2s;
+}
+.chat-input-area textarea:focus{border-color:var(--navy2)}
+.chat-send-btn{
+  width:42px;height:42px;border-radius:12px;
+  background:linear-gradient(135deg,var(--orange),var(--orange2));
+  border:none;color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  flex-shrink:0;transition:transform .2s;
+}
+.chat-send-btn:hover{transform:scale(1.08)}
 </style>
 </head>
 <body>
@@ -621,6 +731,7 @@ select{
       </form>
 
       <!-- Success Card -->
+      <div class="card duplicate-card" id="duplicateCard"><div class="duplicate-icon">✅</div><div class="duplicate-title">أنت مسجل بالفعل!</div><div class="duplicate-text">تم تسجيل رقم هاتفك مسبقاً في نظام طموح. فريقنا سيتواصل معك قريباً.</div><button class="ai-btn" onclick="openAssistant()">🤖 المساعد الذكي لطموح</button></div>
       <div class="card success-card" id="successCard">
         <div class="success-icon">✅</div>
         <div class="success-title">تم استلام بياناتك بنجاح!</div>
@@ -629,6 +740,7 @@ select{
         <a class="whatsapp-btn" id="waBtn" href="#" target="_blank">
           💬 تواصل معانا على واتساب الآن
         </a>
+        <button class="ai-btn" onclick="openAssistant()">🤖 المساعد الذكي لطموح</button>
       </div>
 
     </div>
@@ -732,51 +844,6 @@ function validate() {
   return ok;
 }
 
-async function submitForm() {
-  document.getElementById('errorBanner').classList.remove('on');
-
-  if (!validate()) return;
-
-  if (SCRIPT_URL.includes('YOUR_APPS_SCRIPT')) {
-    showError('الصفحة لسه مش متصلة بالنظام — تواصل مع الدعم الفني.');
-    return;
-  }
-
-  const btn = document.getElementById('submitBtn');
-  const spinner = document.getElementById('spinner');
-  const btnText = document.getElementById('btnText');
-  btn.disabled = true;
-  spinner.classList.add('on');
-  btnText.textContent = 'جاري الإرسال...';
-
-  const data = {
-    action: 'addClient',
-    name: document.getElementById('name').value.trim(),
-    phone: document.getElementById('phone').value.trim().replace(/\s/g, ''),
-    city: document.getElementById('city').value.trim(),
-    job: document.getElementById('job').value,
-    adSource: getAdSource(),
-    status: 'جديد',
-    notes: document.getElementById('experience').value
-      ? 'الخبرة: ' + document.getElementById('experience').value
-      : '',
-  };
-
-  try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(data),
-    });
-    showSuccess(data);
-  } catch (e) {
-    showError('حصل خطأ في الاتصال. جرب تاني أو تواصل معانا مباشرة على واتساب.');
-    btn.disabled = false;
-    spinner.classList.remove('on');
-    btnText.textContent = 'إرسال البيانات الآن';
-  }
-}
 
 function showError(msg) {
   const banner = document.getElementById('errorBanner');
@@ -808,6 +875,318 @@ function escapeHtml(s) {
     document.getElementById('errorBanner').classList.remove('on');
   });
 });
+</script>
+
+<!-- Duplicate Card (inside formCard flow) -->
+<div class="card duplicate-card" id="duplicateCard">
+  <div class="duplicate-icon">✅</div>
+  <div class="duplicate-title">أنت مسجل بالفعل!</div>
+  <div class="duplicate-text">تم تسجيل رقم هاتفك مسبقاً. فريق طموح سيتواصل معك قريباً.</div>
+  <button class="ai-btn" onclick="openAssistant()">🤖 المساعد الذكي لطموح</button>
+</div>
+
+<!-- Chat Modal -->
+<div class="chat-overlay" id="tomouhChatModal" onclick="handleOverlayClick(event)">
+  <div class="chat-modal">
+    <div class="chat-header">
+      <div class="chat-header-icon">🤖</div>
+      <div class="chat-header-info">
+        <div class="chat-header-title">المساعد الذكي لطموح</div>
+        <div class="chat-header-sub">متاح دائماً للإجابة على استفساراتك</div>
+      </div>
+      <div class="chat-header-actions">
+        <button class="chat-icon-btn" onclick="resetChat()" title="محادثة جديدة">🔄</button>
+        <button class="chat-icon-btn" onclick="closeAssistant()" title="إغلاق">✕</button>
+      </div>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-area">
+      <textarea id="chatInput" placeholder="اكتب سؤالك هنا..." rows="1"
+        onkeydown="handleChatKey(event)"
+        oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+      <button class="chat-send-btn" onclick="sendChatMessage()">➤</button>
+    </div>
+  </div>
+</div>
+<script>
+// ============================================================
+// 1. PHONE NORMALIZATION
+// ============================================================
+function normalizePhone(phone) {
+  let p = phone.replace(/[\s\-\(\)\.]/g, '');
+  if (p.startsWith('+20')) p = '0' + p.slice(3);
+  else if (p.startsWith('0020')) p = '0' + p.slice(4);
+  else if (p.startsWith('20') && p.length === 12) p = '0' + p.slice(2);
+  return p;
+}
+
+// ============================================================
+// 2. CHECK DUPLICATE + SUBMIT WITH DUPLICATE PROTECTION
+// ============================================================
+const SCRIPT_URL_FIXED = 'https://script.google.com/macros/s/AKfycbzJf22tKMMLb3hIU8LYSVJHc2fLKapEHu8mhyt3QyEeBL3pMXMNo1WWSfrUblKTd2IHXg/exec';
+
+async function checkDuplicate(phone) {
+  try {
+    const normalized = normalizePhone(phone);
+    const url = SCRIPT_URL_FIXED + '?action=checkPhone&phone=' + encodeURIComponent(normalized);
+    const resp = await fetch(url, { method: 'GET', mode: 'cors' });
+    if (resp.ok) {
+      const data = await resp.json();
+      return data.exists === true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+// Override submitForm with duplicate check
+async function submitForm() {
+  document.getElementById('errorBanner').classList.remove('on');
+  if (!validate()) return;
+
+  const btn = document.getElementById('submitBtn');
+  const spinner = document.getElementById('spinner');
+  const btnText = document.getElementById('btnText');
+  btn.disabled = true;
+  spinner.classList.add('on');
+  btnText.textContent = 'جاري التحقق...';
+
+  const rawPhone = document.getElementById('phone').value.trim().replace(/\s/g, '');
+  const normPhone = normalizePhone(rawPhone);
+
+  // Check duplicate
+  const isDuplicate = await checkDuplicate(normPhone);
+
+  if (isDuplicate) {
+    btn.disabled = false;
+    spinner.classList.remove('on');
+    btnText.textContent = 'إرسال البيانات الآن';
+    // Show duplicate message and assistant
+    showDuplicateMessage();
+    return;
+  }
+
+  btnText.textContent = 'جاري الإرسال...';
+
+  const regData = {
+    action: 'addClient',
+    name: document.getElementById('name').value.trim(),
+    phone: normPhone,
+    city: document.getElementById('city').value.trim(),
+    job: document.getElementById('job').value,
+    adSource: getAdSource(),
+    status: 'جديد',
+    notes: document.getElementById('experience').value ? 'الخبرة: ' + document.getElementById('experience').value : '',
+  };
+
+  // Store for assistant
+  window._regData = regData;
+
+  try {
+    await fetch(SCRIPT_URL_FIXED, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(regData),
+    });
+    showSuccess(regData);
+  } catch(e) {
+    showError('حصل خطأ في الاتصال. جرب تاني أو تواصل معانا مباشرة على واتساب.');
+    btn.disabled = false;
+    spinner.classList.remove('on');
+    btnText.textContent = 'إرسال البيانات الآن';
+  }
+}
+
+function showDuplicateMessage() {
+  document.getElementById('formCard').style.display = 'none';
+  document.getElementById('duplicateCard').classList.add('on');
+}
+
+// ============================================================
+// 3. AI ASSISTANT
+// ============================================================
+const TOMOUH_KNOWLEDGE = `
+أنت مساعد شركة طموح الذكي. الشركة متخصصة في إلحاق العمالة المصرية بالخارج، حالياً في ألبانيا.
+
+معلومات الشركة:
+- الاسم: شركة طموح لإلحاق العمالة بالخارج
+- التخصص: توفير فرص عمل حقيقية ومضمونة في الخارج (ألبانيا حالياً)
+- المميزات: عقود رسمية قبل السفر، استقبال من المطار، سكن آمن، متابعة حتى الاستقرار
+
+الوظائف المتاحة حالياً في ألبانيا:
+1. سيراميك (عمال تركيب سيراميك)
+2. نجار مسلح
+3. سباك
+4. حداد مسلح
+5. جبسمبورد
+
+الإجراءات والمتطلبات:
+- التسجيل عبر الموقع ومن ثم يتواصل فريق طموح مع المتقدم
+- يتم توقيع عقد رسمي معتمد قبل السفر
+- يوفر الشركة استقبال من مطار ألبانيا
+- سكن مناسب وآمن خلال فترة العمل
+- متابعة مستمرة من فريق طموح
+
+للتسجيل: يجب ملء نموذج التسجيل في الموقع (الاسم، رقم الموبايل، المحافظة، المجال، سنوات الخبرة)
+للتواصل المباشر: واتساب 201005718941
+
+إذا سألك أحد عن معلومات غير موجودة هنا (مثل الراتب بالتحديد أو مواعيد السفر أو توافر وظائف بعينها) قل له:
+"هذه المعلومات تحتاج تأكيد من فريق طموح. سأرسل سؤالك لفريق خدمة العملاء وسيتواصلون معك في أقرب وقت."
+ثم اطلب من النظام إرسال البيانات.
+
+تحدث دائماً بالعربية. كن ودوداً ومحترفاً. لا تخترع أرقاماً أو معلومات.
+`;
+
+let _chatHistory = [];
+let _escalated = false;
+
+function openAssistant() {
+  document.getElementById('tomouhChatModal').classList.add('open');
+  if (_chatHistory.length === 0) {
+    const userData = window._regData || null;
+    let greeting = 'مرحباً! أنا المساعد الذكي لشركة طموح 🤖\nكيف يمكنني مساعدتك اليوم؟';
+    if (userData) {
+      greeting = `مرحباً ${userData.name}! 👋\nتم تسجيل بياناتك بنجاح. أنا المساعد الذكي لشركة طموح.\nكيف يمكنني مساعدتك؟`;
+    }
+    appendChatMessage('assistant', greeting);
+  }
+}
+
+function closeAssistant() {
+  document.getElementById('tomouhChatModal').classList.remove('open');
+}
+
+function appendChatMessage(role, text) {
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + (role === 'user' ? 'chat-user' : 'chat-bot');
+  div.innerHTML = `<div class="chat-bubble">${text.replace(/\n/g,'<br>')}</div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  if (role !== 'typing') {
+    _chatHistory.push({ role: role === 'user' ? 'user' : 'assistant', content: text });
+  }
+}
+
+function showTyping() {
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg chat-bot';
+  div.id = 'typingIndicator';
+  div.innerHTML = '<div class="chat-bubble typing-dots"><span></span><span></span><span></span></div>';
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typingIndicator');
+  if (t) t.remove();
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  input.style.height = 'auto';
+  appendChatMessage('user', text);
+  showTyping();
+
+  const userData = window._regData || null;
+  const userContext = userData
+    ? `معلومات المستخدم المسجل: الاسم: ${userData.name}، الهاتف: ${userData.phone}، المحافظة: ${userData.city}، المجال: ${userData.job}`
+    : 'المستخدم لم يسجل بياناته بعد في هذه الجلسة.';
+
+  const messages = [
+    { role: 'user', content: TOMOUH_KNOWLEDGE + '\n\n' + userContext },
+    { role: 'assistant', content: 'حسناً، سأساعدك بناءً على معلومات شركة طموح.' },
+    ..._chatHistory.slice(-10),
+  ];
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 600,
+        system: TOMOUH_KNOWLEDGE + '\n\n' + userContext,
+        messages: _chatHistory.slice(-10).length > 0 ? _chatHistory.slice(-10) : [{ role: 'user', content: text }],
+      })
+    });
+    const data = await resp.json();
+    removeTyping();
+    const reply = data?.content?.[0]?.text || 'عذراً، حدث خطأ مؤقت. يرجى المحاولة مجدداً.';
+    appendChatMessage('assistant', reply);
+
+    // Check if escalation needed
+    if (reply.includes('سأرسل سؤالك') || reply.includes('فريق خدمة العملاء') || reply.includes('تأكيد من فريق')) {
+      if (!_escalated && userData) {
+        _escalated = true;
+        await escalateToTeam(userData, text);
+      } else if (!_escalated) {
+        _escalated = true;
+        await escalateWithQuestion(text);
+      }
+    }
+  } catch(e) {
+    removeTyping();
+    appendChatMessage('assistant', 'نواجه مشكلة مؤقتة. يرجى المحاولة مجدداً أو التواصل مع فريق طموح مباشرة.');
+  }
+}
+
+async function escalateToTeam(userData, question) {
+  try {
+    const payload = {
+      action: 'aiFollowup',
+      name: userData.name || '-',
+      phone: userData.phone || '-',
+      city: userData.city || '-',
+      job: userData.job || '-',
+      question: question,
+      timestamp: new Date().toLocaleString('ar-EG'),
+    };
+    await fetch(SCRIPT_URL_FIXED, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload),
+    });
+  } catch(e) {}
+}
+
+async function escalateWithQuestion(question) {
+  // Ask user for contact info if not registered
+  const nameEl = document.getElementById('name');
+  const phoneEl = document.getElementById('phone');
+  const name = nameEl?.value?.trim() || '-';
+  const phone = phoneEl?.value?.trim() || '-';
+  if (name !== '-' || phone !== '-') {
+    await escalateToTeam({ name, phone, city: '-', job: '-' }, question);
+  }
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendChatMessage();
+  }
+}
+
+function resetChat() {
+  _chatHistory = [];
+  _escalated = false;
+  document.getElementById('chatMessages').innerHTML = '';
+  const userData = window._regData || null;
+  let greeting = 'مرحباً! أنا المساعد الذكي لشركة طموح 🤖\nكيف يمكنني مساعدتك اليوم؟';
+  if (userData) greeting = `مرحباً ${userData.name}! 👋\nكيف يمكنني مساعدتك؟`;
+  appendChatMessage('assistant', greeting);
+}
+
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('tomouhChatModal')) closeAssistant();
+}
 </script>
 </body>
 </html>
