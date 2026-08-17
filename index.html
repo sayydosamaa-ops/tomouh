@@ -1156,12 +1156,10 @@ async function sendChatMessage() {
   ];
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('https://tomouh-ai.sayydosamaa.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 600,
         system: TOMOUH_KNOWLEDGE + '\n\n' + userContext,
         messages: _chatHistory.slice(-10).length > 0 ? _chatHistory.slice(-10) : [{ role: 'user', content: text }],
       })
