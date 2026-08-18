@@ -972,7 +972,7 @@ async function checkDuplicate(phone) {
   try {
     const normalized = normalizePhone(phone);
     const url = SCRIPT_URL_FIXED + '?action=checkPhone&phone=' + encodeURIComponent(normalized);
-    const resp = await fetch(url, { method: 'GET', mode: 'cors' });
+    const resp = await fetch(url);
     if (resp.ok) {
       const data = await resp.json();
       return data.exists === true;
