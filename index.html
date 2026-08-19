@@ -971,17 +971,13 @@ const SCRIPT_URL_FIXED = 'https://script.google.com/macros/s/AKfycbzJf22tKMMLb3h
 async function checkDuplicate(phone) {
   try {
     const normalized = normalizePhone(phone);
-    // Try GET first (direct checkPhone)
     const url = SCRIPT_URL_FIXED + '?action=checkPhone&phone=' + encodeURIComponent(normalized);
     const resp = await fetch(url);
     if (resp.ok) {
       const data = await resp.json();
       return data.exists === true;
     }
-  } catch(e) {
-    // If GET fails due to CORS, return false but Apps Script will handle duplicate on save
-    console.log('checkPhone failed, will rely on server-side check');
-  }
+  } catch(e) {}
   return false;
 }
 
@@ -1029,8 +1025,6 @@ async function submitForm() {
   window._regData = regData;
 
   try {
-    // Use checkAndAdd action to prevent duplicates server-side
-    regData.action = 'checkAndAdd';
     await fetch(SCRIPT_URL_FIXED, {
       method: 'POST',
       mode: 'no-cors',
@@ -1192,7 +1186,7 @@ async function registerViaAI(info) {
       }
     }
   } catch(e) {}
-  // Register via same system
+  // Register via same system as website
   const regData = {
     action: 'addClient',
     name: info.name,
@@ -1216,37 +1210,6 @@ async function registerViaAI(info) {
     appendChatMessage('assistant', 'حدث خطأ أثناء التسجيل. يرجى ملء نموذج التسجيل في الموقع أو التواصل معنا على واتساب.');
   }
 }
-async function escalateToTeam(userData, question) {
-  try {
-    const payload = {
-      action: 'aiFollowup',
-      name: userData.name || '-',
-      phone: userData.phone || '-',
-      city: userData.city || '-',
-      job: userData.job || '-',
-      question: question,
-      timestamp: new Date().toLocaleString('ar-EG'),
-    };
-    await fetch(SCRIPT_URL_FIXED, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload),
-    });
-  } catch(e) {}
-}
-
-async function escalateWithQuestion(question) {
-  // Ask user for contact info if not registered
-  const nameEl = document.getElementById('name');
-  const phoneEl = document.getElementById('phone');
-  const name = nameEl?.value?.trim() || '-';
-  const phone = phoneEl?.value?.trim() || '-';
-  if (name !== '-' || phone !== '-') {
-    await escalateToTeam({ name, phone, city: '-', job: '-' }, question);
-  }
-}
-
 function handleChatKey(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
