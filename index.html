@@ -969,20 +969,6 @@ function normalizePhone(phone) {
 const SCRIPT_URL_FIXED = 'https://script.google.com/macros/s/AKfycbzJf22tKMMLb3hIU8LYSVJHc2fLKapEHu8mhyt3QyEeBL3pMXMNo1WWSfrUblKTd2IHXg/exec';
 
 async function checkDuplicate(phone) {
-  try {
-    const normalized = normalizePhone(phone);
-    // Use Cloudflare Worker via POST to avoid CORS issues
-    const resp = await fetch('https://tomouh-ai.sayydosamaa.workers.dev', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({action: 'checkPhone', phone: normalized})
-    });
-    if (resp.ok) {
-      const data = await resp.json();
-      return data.exists === true;
-    }
-  } catch(e) {
-    console.log('checkPhone error:', e.message);
-  }
+  // Frontend check disabled - backend (Apps Script addClient) prevents duplicates server-side
   return false;
 }
