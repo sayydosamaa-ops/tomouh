@@ -971,13 +971,17 @@ const SCRIPT_URL_FIXED = 'https://script.google.com/macros/s/AKfycbzJf22tKMMLb3h
 async function checkDuplicate(phone) {
   try {
     const normalized = normalizePhone(phone);
+    // Try GET first (direct checkPhone)
     const url = SCRIPT_URL_FIXED + '?action=checkPhone&phone=' + encodeURIComponent(normalized);
-    const resp = await fetch(url, { method: 'GET', mode: 'cors' });
+    const resp = await fetch(url);
     if (resp.ok) {
       const data = await resp.json();
       return data.exists === true;
     }
-  } catch(e) {}
+  } catch(e) {
+    // If GET fails due to CORS, return false but Apps Script will handle duplicate on save
+    console.log('checkPhone failed, will rely on server-side check');
+  }
   return false;
 }
 
@@ -1025,6 +1029,8 @@ async function submitForm() {
   window._regData = regData;
 
   try {
+    // Use checkAndAdd action to prevent duplicates server-side
+    regData.action = 'checkAndAdd';
     await fetch(SCRIPT_URL_FIXED, {
       method: 'POST',
       mode: 'no-cors',
