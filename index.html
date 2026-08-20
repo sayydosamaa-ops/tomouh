@@ -1276,4 +1276,17 @@ function handleOverlayClick(e) {
 </script>
 
 </body>
-</html>
+</html>async function checkDuplicate(phone) {
+  try {
+    const normalized = normalizePhone(phone);
+    const url = 'https://script.google.com/macros/s/AKfycbzJf22tKMMLb3hIU8LYSVJHc2fLKapEHu8mhyt3QyEeBL3pMXMNo1WWSfrUblKTd2IHXg/exec?action=checkPhone&phone=' + encodeURIComponent(normalized);
+    const resp = await fetch(url);
+    if (resp.ok) {
+      const data = await resp.json();
+      return data.exists === true;
+    }
+  } catch(e) {
+    console.log('checkPhone error:', e.message);
+  }
+  return false;
+}
