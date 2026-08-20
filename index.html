@@ -847,78 +847,7 @@ select{
 <!-- Footer -->
 </div>
 
-<script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJf22tKMMLb3hIU8LYSVJHc2fLKapEHu8mhyt3QyEeBL3pMXMNo1WWSfrUblKTd2IHXg/exec';
-const WHATSAPP_NUMBER = '201000000000';
 
-function getAdSource() {
-  const params = new URLSearchParams(window.location.search);
-  const utmSource = params.get('utm_source');
-  const utmCampaign = params.get('utm_campaign');
-  if (utmSource) return utmCampaign ? `${utmSource} - ${utmCampaign}` : utmSource;
-  return 'صفحة الهبوط - مباشر';
-}
-
-function showFieldError(id, show) {
-  const el = document.getElementById(id);
-  el.classList.toggle('error', show);
-}
-
-function validate() {
-  let ok = true;
-  const name = document.getElementById('name').value.trim();
-  const phone = document.getElementById('phone').value.trim().replace(/\s/g, '');
-  const city = document.getElementById('city').value.trim();
-  const job = document.getElementById('job').value;
-
-  showFieldError('f-name', name.length < 3);
-  if (name.length < 3) ok = false;
-
-  const phoneValid = /^01[0-9]{9}$/.test(phone);
-  showFieldError('f-phone', !phoneValid);
-  if (!phoneValid) ok = false;
-
-  showFieldError('f-city', city.length < 2);
-  if (city.length < 2) ok = false;
-
-  showFieldError('f-job', !job);
-  if (!job) ok = false;
-
-  return ok;
-}
-
-
-function showError(msg) {
-  const banner = document.getElementById('errorBanner');
-  banner.textContent = '⚠️ ' + msg;
-  banner.classList.add('on');
-}
-
-function showSuccess(data) {
-  document.getElementById('formCard').style.display = 'none';
-  document.getElementById('successCard').classList.add('on');
-  document.getElementById('successDetail').innerHTML = `
-    <div><b>الاسم:</b> ${escapeHtml(data.name)}</div>
-    <div><b>المجال:</b> ${escapeHtml(data.job)}</div>
-    <div><b>الموبايل:</b> ${escapeHtml(data.phone)}</div>
-  `;
-  const waMsg = encodeURIComponent(`السلام عليكم، أنا ${data.name} سجلت بياناتي على الموقع بخصوص فرصة عمل في مجال ${data.job}`);
-  document.getElementById('waBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${waMsg}`;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function escapeHtml(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
-
-['name','phone','city','job','experience'].forEach(id => {
-  document.getElementById(id).addEventListener('input', () => {
-    document.getElementById('errorBanner').classList.remove('on');
-  });
-});
-</script>
 
 <!-- Duplicate Card (inside formCard flow) -->
 <div class="card duplicate-card" id="duplicateCard">
