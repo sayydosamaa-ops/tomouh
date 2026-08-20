@@ -1273,10 +1273,9 @@ function resetChat() {
 function handleOverlayClick(e) {
   if (e.target === document.getElementById('tomouhChatModal')) closeAssistant();
 }
-</script>
 
-</body>
-</html>async function checkDuplicate(phone) {
+
+async function checkDuplicate(phone) {
   try {
     const normalized = normalizePhone(phone);
     const url = 'https://script.google.com/macros/s/AKfycbzJf22tKMMLb3hIU8LYSVJHc2fLKapEHu8mhyt3QyEeBL3pMXMNo1WWSfrUblKTd2IHXg/exec?action=checkPhone&phone=' + encodeURIComponent(normalized);
@@ -1290,3 +1289,7 @@ function handleOverlayClick(e) {
   }
   return false;
 }
+</script>
+
+</body>
+</html>
