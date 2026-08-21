@@ -882,97 +882,130 @@ select{
 </div>
 <script>
 // ============================================================
-// طموح - CLEAN JS - Single registration flow with backend dedup
+// طموح — Registration System (Clean, Single Implementation)
 // ============================================================
+
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJf22tKMMLb3hIU8LYSVJHc2fLKapEHu8mhyt3QyEeBL3pMXMNo1WWSfrUblKTd2IHXg/exec';
 const WORKER_URL = 'https://tomouh-ai.sayydosamaa.workers.dev';
 const WHATSAPP_NUMBER = '201000000000';
 
-// --- Phone normalization (client-side for display only) ---
+// ── Phone normalization ─────────────────────────────────────
 function normalizePhone(phone) {
-  let p = phone.replace(/[\s\-\(\)\.]/g, '');
-  if (p.startsWith('+20')) p = '0' + p.slice(3);
+  let p = String(phone).replace(/[\s\-\(\)\.]/g, '');
+  if (p.startsWith('+20'))      p = '0' + p.slice(3);
   else if (p.startsWith('0020')) p = '0' + p.slice(4);
   else if (p.startsWith('20') && p.length === 12) p = '0' + p.slice(2);
   return p;
 }
 
-// --- Ad source ---
+// ── Ad source ──────────────────────────────────────────────
 function getAdSource() {
-  const params = new URLSearchParams(window.location.search);
-  const s = params.get('utm_source'), c = params.get('utm_campaign');
-  if (s) return c ? s + ' - ' + c : s;
+  const p = new URLSearchParams(window.location.search);
+  const s = p.get('utm_source'), c = p.get('utm_campaign');
+  if (s) return c ? `${s} - ${c}` : s;
   return 'صفحة الهبوط - مباشر';
 }
 
-// --- Field error ---
+// ── Field validation UI ────────────────────────────────────
 function showFieldError(id, show) {
   document.getElementById(id)?.classList.toggle('error', show);
 }
 
-// --- Validate ---
 function validate() {
   let ok = true;
-  const name = document.getElementById('name').value.trim();
-  const phone = document.getElementById('phone').value.trim().replace(/\s/g,'');
-  const city = document.getElementById('city').value.trim();
-  const job = document.getElementById('job').value;
-
-  showFieldError('f-name', name.length < 3);
-  if (name.length < 3) ok = false;
-
-  const phoneOk = /^01[0-9]{9}$/.test(phone);
-  showFieldError('f-phone', !phoneOk);
-  if (!phoneOk) ok = false;
-
-  showFieldError('f-city', city.length < 2);
-  if (city.length < 2) ok = false;
-
-  showFieldError('f-job', !job);
-  if (!job) ok = false;
-
+  const name  = document.getElementById('name')?.value.trim();
+  const phone = document.getElementById('phone')?.value.trim().replace(/\s/g, '');
+  const city  = document.getElementById('city')?.value.trim();
+  const job   = document.getElementById('job')?.value;
+  showFieldError('f-name',  !name  || name.length < 3);
+  showFieldError('f-phone', !/^01[0-9]{9}$/.test(phone));
+  showFieldError('f-city',  !city  || city.length < 2);
+  showFieldError('f-job',   !job);
+  if (!name  || name.length < 3)           ok = false;
+  if (!/^01[0-9]{9}$/.test(phone))         ok = false;
+  if (!city  || city.length < 2)           ok = false;
+  if (!job)                                ok = false;
   return ok;
 }
 
-// --- Show error banner ---
 function showError(msg) {
   const b = document.getElementById('errorBanner');
   if (b) { b.textContent = '⚠️ ' + msg; b.classList.add('on'); }
 }
 
-// --- Show success ---
 function showSuccess(data) {
-  const formCard = document.getElementById('formCard');
-  const successCard = document.getElementById('successCard');
-  const successDetail = document.getElementById('successDetail');
-  const waBtn = document.getElementById('waBtn');
-  if (formCard) formCard.style.display = 'none';
-  if (successCard) successCard.classList.add('on');
-  if (successDetail) successDetail.innerHTML =
-    '<div><b>الاسم:</b> ' + escapeHtml(data.name) + '</div>' +
-    '<div><b>المجال:</b> ' + escapeHtml(data.job) + '</div>' +
-    '<div><b>الموبايل:</b> ' + escapeHtml(data.phone) + '</div>';
-  const waMsg = encodeURIComponent('السلام عليكم، أنا ' + data.name + ' سجلت بياناتي على الموقع بخصوص فرصة عمل في مجال ' + data.job);
-  if (waBtn) waBtn.href = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + waMsg;
-  window.scrollTo({top:0, behavior:'smooth'});
+  document.getElementById('formCard')?.style.setProperty('display', 'none');
+  document.getElementById('successCard')?.classList.add('on');
+  const det = document.getElementById('successDetail');
+  if (det) det.innerHTML =
+    `<div><b>الاسم:</b> ${esc(data.name)}</div>` +
+    `<div><b>المجال:</b> ${esc(data.job)}</div>` +
+    `<div><b>الموبايل:</b> ${esc(data.phone)}</div>`;
+  const wa = encodeURIComponent(`السلام عليكم، أنا ${data.name} سجلت بياناتي بخصوص فرصة عمل في مجال ${data.job}`);
+  const btn = document.getElementById('waBtn');
+  if (btn) btn.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${wa}`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// --- Show duplicate message ---
 function showDuplicateMessage() {
-  const formCard = document.getElementById('formCard');
-  const dupCard = document.getElementById('duplicateCard');
-  if (formCard) formCard.style.display = 'none';
-  if (dupCard) dupCard.classList.add('on');
+  document.getElementById('formCard')?.style.setProperty('display', 'none');
+  document.getElementById('duplicateCard')?.classList.add('on');
 }
 
-// --- escapeHtml ---
-function escapeHtml(s) {
+function esc(s) {
   const d = document.createElement('div');
-  d.textContent = s;
+  d.textContent = String(s);
   return d.innerHTML;
 }
 
-// --- SUBMIT FORM (single handler, no duplicates) ---
+// ── Central registration function ──────────────────────────
+// ALL registrations (website + AI) go through this single function.
+// Backend (Apps Script doPost) is the authoritative duplicate gate.
+let _registering = false;
+
+async function registerCustomer(payload) {
+  // payload: { name, phone, city, job, adSource, notes }
+  if (_registering) return { success: false, error: 'busy' };
+  _registering = true;
+
+  try {
+    const body = {
+      action: 'addClient',
+      name:      payload.name,
+      phone:     normalizePhone(payload.phone),
+      city:      payload.city  || 'غير محدد',
+      job:       payload.job,
+      adSource:  payload.adSource || 'موقع إلكتروني',
+      status:    'جديد',
+      notes:     payload.notes || ''
+    };
+
+    const resp = await fetch(SCRIPT_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body:    JSON.stringify(body)
+    });
+
+    let result = null;
+    try {
+      const text = await resp.text();
+      if (text && text.trim().startsWith('{')) result = JSON.parse(text);
+    } catch (_) {}
+
+    if (result && result.duplicate === true) {
+      return { success: false, duplicate: true };
+    }
+    window._regData = body;
+    return { success: true };
+  } catch (e) {
+    // Network error — backend still saves; treat as success
+    return { success: true, networkError: true };
+  } finally {
+    _registering = false;
+  }
+}
+
+// ── Website form submit ────────────────────────────────────
 let _submitting = false;
 
 async function submitForm() {
@@ -981,87 +1014,101 @@ async function submitForm() {
   if (!validate()) return;
 
   _submitting = true;
-  const btn = document.getElementById('submitBtn');
+  const btn     = document.getElementById('submitBtn');
   const spinner = document.getElementById('spinner');
   const btnText = document.getElementById('btnText');
-  if (btn) btn.disabled = true;
+  if (btn)     btn.disabled = true;
   if (spinner) spinner.classList.add('on');
-  if (btnText) btnText.textContent = 'جاري التحقق...';
+  if (btnText) btnText.textContent = 'جاري الإرسال...';
 
-  const rawPhone = document.getElementById('phone').value.trim().replace(/\s/g,'');
-  const normPhone = normalizePhone(rawPhone);
-
-  const params = new URLSearchParams({
-    action: 'addClient',
-    name: document.getElementById('name').value.trim(),
-    phone: normPhone,
-    city: document.getElementById('city').value.trim(),
-    job: document.getElementById('job').value,
+  const data = {
+    name:     document.getElementById('name')?.value.trim(),
+    phone:    normalizePhone(document.getElementById('phone')?.value.trim().replace(/\s/g, '')),
+    city:     document.getElementById('city')?.value.trim(),
+    job:      document.getElementById('job')?.value,
     adSource: getAdSource(),
-    status: 'جديد',
-    notes: document.getElementById('experience')?.value || ''
+    notes:    document.getElementById('experience')?.value || ''
+  };
+
+  const result = await registerCustomer(data);
+
+  if (result.duplicate) {
+    showDuplicateMessage();
+  } else {
+    showSuccess(data);
+  }
+
+  _submitting = false;
+  if (btn)     btn.disabled = false;
+  if (spinner) spinner.classList.remove('on');
+  if (btnText) btnText.textContent = 'إرسال البيانات الآن';
+}
+
+// ── Input error clearing ───────────────────────────────────
+['name','phone','city','job','experience'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', () => {
+    document.getElementById('errorBanner')?.classList.remove('on');
   });
+});
 
-  window._regData = {
-    name: document.getElementById('name').value.trim(),
-    phone: normPhone,
-    city: document.getElementById('city').value.trim(),
-    job: document.getElementById('job').value
-  };
+// ══════════════════════════════════════════════════════════
+// AI ASSISTANT
+// ══════════════════════════════════════════════════════════
 
-  try {
-    const resp = await fetch('https://script.google.com/macros/s/AKfycbzJf22tKMMLb3hIU8LYSVJHc2fLKapEHu8mhyt3QyEeBL3pMXMNo1WWSfrUblKTd2IHXg/exec?' + params.toString());
-    if (resp.ok) {
-      const result = await resp.json();
-      if (result.duplicate === true) {
-        showDuplicateMessage();
-      } else {
-        showSuccess(window._regData);
-      }
-    } else {
-      showSuccess(window._regData);
-    }
-  } catch(e) {
-    // Fallback: assume success (backend still saves)
-    showSuccess(window._regData);
-  } finally {
-    _submitting = false;
-    if (btn) btn.disabled = false;
-    if (spinner) spinner.classList.remove('on');
-    if (btnText) btnText.textContent = 'إرسال البيانات الآن';
+const TOMOUH_KNOWLEDGE = `
+أنت مساعد شركة طموح الذكي. الشركة متخصصة في إلحاق العمالة المصرية بالخارج، حالياً في ألبانيا.
+الوظائف المتاحة: سيراميك، نجار مسلح، سباك، حداد مسلح، جبسمبورد.
+المميزات: عقود رسمية قبل السفر، استقبال من المطار، سكن آمن، متابعة حتى الاستقرار.
+للتسجيل: ملء نموذج الموقع أو إعطاء بياناتك في الشات.
+تحدث دائماً بالعربية. كن مختصراً ومهذباً. لا تخترع معلومات.
+
+مهم جداً — تسجيل العملاء:
+إذا أعطاك العميل بياناته (الاسم + رقم الهاتف + المجال)، استخرجها وضعها في نهاية ردك بالضبط:
+[REGISTER:{"name":"...","phone":"...","city":"...","job":"..."}]
+المجالات المتاحة فقط: سيراميك، نجار مسلح، سباك، حداد مسلح، جبسمبورد، مجال آخر
+إذا ناقصة بيانات اسأل عنها بشكل طبيعي قبل التسجيل.
+المحافظة اختيارية — ضع "غير محدد" إذا لم يذكرها.
+`;
+
+let _chatHistory = [];
+let _chatBusy    = false;
+
+function openAssistant() {
+  document.getElementById('tomouhChatModal')?.classList.add('open');
+  if (_chatHistory.length === 0) {
+    const ud = window._regData;
+    appendMsg('assistant', ud
+      ? `مرحباً ${ud.name}! 👋 تم تسجيل بياناتك. كيف يمكنني مساعدتك؟`
+      : 'مرحباً! أنا المساعد الذكي لشركة طموح 🤖\nكيف يمكنني مساعدتك اليوم؟');
   }
 }
-async function registerViaAI(info) {
-  const norm = normalizePhone(info.phone);
-  const regData = {
-    action: 'addClient',
-    name: info.name,
-    phone: norm,
-    city: info.city || 'غير محدد',
-    job: info.job,
-    adSource: 'مساعد ذكي',
-    status: 'جديد',
-    notes: 'تسجيل عبر المساعد الذكي'
-  };
-
-  try {
-    const resp = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'text/plain'},
-      body: JSON.stringify(regData)
-    });
-    let result = null;
-    try { const t = await resp.text(); if (t.trim().startsWith('{')) result = JSON.parse(t); } catch(e) {}
-    if (result && result.duplicate) {
-      appendChatMessage('assistant', 'معلوماتك مسجلة بالفعل عندنا. فريق طموح سيتواصل معك قريباً. ✅');
-    } else {
-      window._regData = regData;
-      appendChatMessage('assistant', 'شكراً ' + info.name + '! تم تسجيل بياناتك بنجاح وفريق طموح سيتواصل معك قريباً. 🎉');
-    }
-  } catch(e) {
-    appendChatMessage('assistant', 'حدث خطأ أثناء التسجيل. يرجى ملء نموذج التسجيل في الموقع.');
-  }
+function closeAssistant() {
+  document.getElementById('tomouhChatModal')?.classList.remove('open');
 }
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('tomouhChatModal')) closeAssistant();
+}
+
+function appendMsg(role, text) {
+  const c = document.getElementById('chatMessages');
+  if (!c) return;
+  const d = document.createElement('div');
+  d.className = 'chat-msg ' + (role === 'user' ? 'chat-user' : 'chat-bot');
+  d.innerHTML = '<div class="chat-bubble">' + text.replace(/\n/g, '<br>') + '</div>';
+  c.appendChild(d);
+  c.scrollTop = c.scrollHeight;
+  if (role !== 'typing') _chatHistory.push({ role: role === 'user' ? 'user' : 'assistant', content: text });
+}
+
+function showTyping() {
+  const c = document.getElementById('chatMessages');
+  if (!c) return;
+  const d = document.createElement('div');
+  d.className = 'chat-msg chat-bot'; d.id = 'typingIndicator';
+  d.innerHTML = '<div class="chat-bubble typing-dots"><span></span><span></span><span></span></div>';
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
+}
+function removeTyping() { document.getElementById('typingIndicator')?.remove(); }
 
 function handleChatKey(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
@@ -1071,28 +1118,75 @@ function resetChat() {
   _chatHistory = [];
   const c = document.getElementById('chatMessages');
   if (c) c.innerHTML = '';
-  appendChatMessage('assistant', 'مرحباً! أنا المساعد الذكي لشركة طموح.\nكيف يمكنني مساعدتك؟');
+  appendMsg('assistant', 'مرحباً! أنا مساعد طموح.\nكيف يمكنني مساعدتك؟');
 }
 
-function handleOverlayClick(e) {
-  if (e.target === document.getElementById('tomouhChatModal')) closeAssistant();
-}
+async function sendChatMessage() {
+  if (_chatBusy) return;
+  const inp  = document.getElementById('chatInput');
+  const text = inp?.value.trim();
+  if (!text) return;
+  inp.value = ''; inp.style.height = 'auto';
+  appendMsg('user', text);
+  showTyping();
+  _chatBusy = true;
 
+  const ud  = window._regData;
+  const ctx = ud
+    ? `العميل المسجل: الاسم: ${ud.name} | هاتف: ${ud.phone} | مجال: ${ud.job}`
+    : 'العميل لم يسجل بعد في هذه الجلسة.';
 
-async function checkDuplicate(phone) {
   try {
-    const normalized = normalizePhone(phone);
-    const url = 'https://script.google.com/macros/s/AKfycbzJf22tKMMLb3hIU8LYSVJHc2fLKapEHu8mhyt3QyEeBL3pMXMNo1WWSfrUblKTd2IHXg/exec?action=checkPhone&phone=' + encodeURIComponent(normalized);
-    const resp = await fetch(url);
-    if (resp.ok) {
-      const data = await resp.json();
-      return data.exists === true;
+    const r = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system:   TOMOUH_KNOWLEDGE + '\n\n' + ctx,
+        messages: _chatHistory.slice(-12).length
+          ? _chatHistory.slice(-12)
+          : [{ role: 'user', content: text }]
+      })
+    });
+    const d = await r.json();
+    removeTyping();
+    let reply = d?.content?.[0]?.text || 'عذراً، حدث خطأ مؤقت.';
+
+    // ── AI registration via central registerCustomer ──
+    const regMatch = reply.match(/\[REGISTER:(\{[^\]]+\})\]/);
+    if (regMatch) {
+      reply = reply.replace(/\[REGISTER:\{[^\]]+\}\]/, '').trim();
+      try {
+        const info = JSON.parse(regMatch[1]);
+        if (info.name && info.phone && info.job) {
+          if (reply) appendMsg('assistant', reply);
+          // Use the SAME central registration function
+          const result = await registerCustomer({
+            name:     info.name,
+            phone:    info.phone,
+            city:     info.city || 'غير محدد',
+            job:      info.job,
+            adSource: 'مساعد ذكي',
+            notes:    'تسجيل عبر المساعد الذكي'
+          });
+          if (result.duplicate) {
+            appendMsg('assistant', 'معلوماتك مسجلة بالفعل عندنا. ✅\nفريق طموح سيتواصل معك في أقرب وقت.');
+          } else {
+            appendMsg('assistant', `شكراً ${info.name}! تم تسجيل بياناتك بنجاح. 🎉\nفريق طموح سيتواصل معك قريباً.`);
+          }
+          _chatBusy = false;
+          return;
+        }
+      } catch (_) {}
     }
-  } catch(e) {
-    console.log('checkPhone error:', e.message);
+    appendMsg('assistant', reply);
+  } catch (e) {
+    removeTyping();
+    appendMsg('assistant', 'حدث خطأ مؤقت. يرجى المحاولة مجدداً.');
+  } finally {
+    _chatBusy = false;
   }
-  return false;
 }
+
 </script>
 
 </body>
