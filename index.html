@@ -991,14 +991,13 @@ async function submitForm() {
   const rawPhone = document.getElementById('phone').value.trim().replace(/\s/g,'');
   const normPhone = normalizePhone(rawPhone);
 
-  // STEP 1: Check duplicate via GET (confirmed working in Version 9)
+  // CHECK DUPLICATE FIRST via Apps Script GET
   try {
     const checkUrl = 'https://script.google.com/macros/s/AKfycbzJf22tKMMLb3hIU8LYSVJHc2fLKapEHu8mhyt3QyEeBL3pMXMNo1WWSfrUblKTd2IHXg/exec?action=checkPhone&phone=' + encodeURIComponent(normPhone);
-    const checkResp = await fetch(checkUrl);
-    if (checkResp.ok) {
-      const checkData = await checkResp.json();
-      if (checkData.exists === true) {
-        // Already registered!
+    const cr = await fetch(checkUrl);
+    if (cr.ok) {
+      const cd = await cr.json();
+      if (cd.exists === true) {
         _submitting = false;
         if (btn) btn.disabled = false;
         if (spinner) spinner.classList.remove('on');
@@ -1007,9 +1006,7 @@ async function submitForm() {
         return;
       }
     }
-  } catch(e) {
-    console.log('checkPhone failed, proceeding:', e.message);
-  }
+  } catch(e) { /* proceed if check fails */ }
 
   if (btnText) btnText.textContent = 'جاري الإرسال...';
 
@@ -1023,10 +1020,8 @@ async function submitForm() {
     status: 'جديد',
     notes: document.getElementById('experience')?.value ? 'الخبرة: ' + document.getElementById('experience').value : '',
   };
-
   window._regData = regData;
 
-  // STEP 2: Send to Apps Script (backend also checks for duplicates)
   try {
     await fetch('https://script.google.com/macros/s/AKfycbzJf22tKMMLb3hIU8LYSVJHc2fLKapEHu8mhyt3QyEeBL3pMXMNo1WWSfrUblKTd2IHXg/exec', {
       method: 'POST',
