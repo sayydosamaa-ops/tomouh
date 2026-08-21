@@ -973,10 +973,10 @@ function escapeHtml(s) {
 }
 
 // --- SUBMIT FORM (single handler, no duplicates) ---
-let _submitting = false; // Race condition guard
+let _submitting = false;
 
 async function submitForm() {
-  if (_submitting) return; // Prevent double-submit
+  if (_submitting) return;
   document.getElementById('errorBanner')?.classList.remove('on');
   if (!validate()) return;
 
@@ -986,10 +986,32 @@ async function submitForm() {
   const btnText = document.getElementById('btnText');
   if (btn) btn.disabled = true;
   if (spinner) spinner.classList.add('on');
-  if (btnText) btnText.textContent = 'جاري الإرسال...';
+  if (btnText) btnText.textContent = 'جاري التحقق...';
 
   const rawPhone = document.getElementById('phone').value.trim().replace(/\s/g,'');
   const normPhone = normalizePhone(rawPhone);
+
+  // STEP 1: Check duplicate via GET (confirmed working in Version 9)
+  try {
+    const checkUrl = 'https://script.google.com/macros/s/AKfycbzJf22tKMMLb3hIU8LYSVJHc2fLKapEHu8mhyt3QyEeBL3pMXMNo1WWSfrUblKTd2IHXg/exec?action=checkPhone&phone=' + encodeURIComponent(normPhone);
+    const checkResp = await fetch(checkUrl);
+    if (checkResp.ok) {
+      const checkData = await checkResp.json();
+      if (checkData.exists === true) {
+        // Already registered!
+        _submitting = false;
+        if (btn) btn.disabled = false;
+        if (spinner) spinner.classList.remove('on');
+        if (btnText) btnText.textContent = 'إرسال البيانات الآن';
+        showDuplicateMessage();
+        return;
+      }
+    }
+  } catch(e) {
+    console.log('checkPhone failed, proceeding:', e.message);
+  }
+
+  if (btnText) btnText.textContent = 'جاري الإرسال...';
 
   const regData = {
     action: 'addClient',
@@ -1004,106 +1026,24 @@ async function submitForm() {
 
   window._regData = regData;
 
+  // STEP 2: Send to Apps Script (backend also checks for duplicates)
   try {
-    // Send to Apps Script - backend checks for duplicates before saving
-    const resp = await fetch(SCRIPT_URL, {
+    await fetch('https://script.google.com/macros/s/AKfycbzJf22tKMMLb3hIU8LYSVJHc2fLKapEHu8mhyt3QyEeBL3pMXMNo1WWSfrUblKTd2IHXg/exec', {
       method: 'POST',
+      mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(regData),
     });
-
-    // Try to read response (Apps Script with CORS)
-    let result = null;
-    try {
-      const text = await resp.text();
-      if (text && text.trim().startsWith('{')) {
-        result = JSON.parse(text);
-      }
-    } catch(e) {}
-
-    if (result && result.duplicate === true) {
-      showDuplicateMessage();
-    } else {
-      showSuccess(regData);
-    }
-  } catch(e) {
-    // no-cors fallback: can't read response, assume success
-    // Backend will handle duplicate prevention
     showSuccess(regData);
+  } catch(e) {
+    showError('حدث خطأ في الاتصال. يرجى المحاولة مجدداً.');
   } finally {
     _submitting = false;
     if (btn) btn.disabled = false;
-    if (spinner) spinner?.classList.remove('on');
+    if (spinner) spinner.classList.remove('on');
     if (btnText) btnText.textContent = 'إرسال البيانات الآن';
   }
 }
-
-// Clear error on input
-['name','phone','city','job','experience'].forEach(id => {
-  document.getElementById(id)?.addEventListener('input', () => {
-    document.getElementById('errorBanner')?.classList.remove('on');
-  });
-});
-
-// ============================================================
-// AI ASSISTANT
-// ============================================================
-const TOMOUH_KNOWLEDGE = `
-أنت مساعد شركة طموح الذكي. الشركة متخصصة في إلحاق العمالة المصرية بالخارج، حالياً في ألبانيا.
-الوظائف المتاحة: سيراميك، نجار مسلح، سباك، حداد مسلح، جبسمبورد.
-المميزات: عقود رسمية، استقبال من المطار، سكن آمن، متابعة حتى الاستقرار.
-للتسجيل: ملء نموذج الموقع أو إعطاء بياناتك في الشات.
-تحدث دائماً بالعربية. لا تخترع معلومات.
-مهم: إذا أعطاك العميل اسمه ورقم هاتفه ومجاله، استخرجها وضعها في نهاية ردك هكذا:
-[REGISTER:{"name":"...","phone":"...","city":"...","job":"..."}]
-المجالات المتاحة: سيراميك، نجار مسلح، سباك، حداد مسلح، جبسمبورد، مجال آخر
-إذا ناقصة معلومات، اسأل عنها أولاً.
-`;
-
-let _chatHistory = [];
-let _chatSubmitting = false;
-
-function openAssistant() {
-  document.getElementById('tomouhChatModal')?.classList.add('open');
-  if (_chatHistory.length === 0) {
-    const ud = window._regData;
-    const greeting = ud
-      ? 'مرحباً ' + ud.name + '! 👋 تم تسجيل بياناتك. كيف يمكنني مساعدتك؟'
-      : 'مرحباً! أنا المساعد الذكي لشركة طموح 🤖\nكيف يمكنني مساعدتك اليوم؟';
-    appendChatMessage('assistant', greeting);
-  }
-}
-
-function closeAssistant() {
-  document.getElementById('tomouhChatModal')?.classList.remove('open');
-}
-
-function appendChatMessage(role, text) {
-  const c = document.getElementById('chatMessages');
-  if (!c) return;
-  const d = document.createElement('div');
-  d.className = 'chat-msg ' + (role === 'user' ? 'chat-user' : 'chat-bot');
-  d.innerHTML = '<div class="chat-bubble">' + text.replace(/\n/g,'<br>') + '</div>';
-  c.appendChild(d);
-  c.scrollTop = c.scrollHeight;
-  if (role !== 'typing') _chatHistory.push({role: role === 'user' ? 'user' : 'assistant', content: text});
-}
-
-function showTyping() {
-  const c = document.getElementById('chatMessages');
-  if (!c) return;
-  const d = document.createElement('div');
-  d.className = 'chat-msg chat-bot';
-  d.id = 'typingIndicator';
-  d.innerHTML = '<div class="chat-bubble typing-dots"><span></span><span></span><span></span></div>';
-  c.appendChild(d);
-  c.scrollTop = c.scrollHeight;
-}
-
-function removeTyping() {
-  document.getElementById('typingIndicator')?.remove();
-}
-
 async function sendChatMessage() {
   if (_chatSubmitting) return;
   const inp = document.getElementById('chatInput');
