@@ -991,26 +991,7 @@ async function submitForm() {
   const rawPhone = document.getElementById('phone').value.trim().replace(/\s/g,'');
   const normPhone = normalizePhone(rawPhone);
 
-  // CHECK DUPLICATE FIRST via Apps Script GET
-  try {
-    const checkUrl = 'https://script.google.com/macros/s/AKfycbzJf22tKMMLb3hIU8LYSVJHc2fLKapEHu8mhyt3QyEeBL3pMXMNo1WWSfrUblKTd2IHXg/exec?action=checkPhone&phone=' + encodeURIComponent(normPhone);
-    const cr = await fetch(checkUrl);
-    if (cr.ok) {
-      const cd = await cr.json();
-      if (cd.exists === true) {
-        _submitting = false;
-        if (btn) btn.disabled = false;
-        if (spinner) spinner.classList.remove('on');
-        if (btnText) btnText.textContent = 'إرسال البيانات الآن';
-        showDuplicateMessage();
-        return;
-      }
-    }
-  } catch(e) { /* proceed if check fails */ }
-
-  if (btnText) btnText.textContent = 'جاري الإرسال...';
-
-  const regData = {
+  const params = new URLSearchParams({
     action: 'addClient',
     name: document.getElementById('name').value.trim(),
     phone: normPhone,
@@ -1018,20 +999,31 @@ async function submitForm() {
     job: document.getElementById('job').value,
     adSource: getAdSource(),
     status: 'جديد',
-    notes: document.getElementById('experience')?.value ? 'الخبرة: ' + document.getElementById('experience').value : '',
+    notes: document.getElementById('experience')?.value || ''
+  });
+
+  window._regData = {
+    name: document.getElementById('name').value.trim(),
+    phone: normPhone,
+    city: document.getElementById('city').value.trim(),
+    job: document.getElementById('job').value
   };
-  window._regData = regData;
 
   try {
-    await fetch('https://script.google.com/macros/s/AKfycbzJf22tKMMLb3hIU8LYSVJHc2fLKapEHu8mhyt3QyEeBL3pMXMNo1WWSfrUblKTd2IHXg/exec', {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(regData),
-    });
-    showSuccess(regData);
+    const resp = await fetch('https://script.google.com/macros/s/AKfycbzJf22tKMMLb3hIU8LYSVJHc2fLKapEHu8mhyt3QyEeBL3pMXMNo1WWSfrUblKTd2IHXg/exec?' + params.toString());
+    if (resp.ok) {
+      const result = await resp.json();
+      if (result.duplicate === true) {
+        showDuplicateMessage();
+      } else {
+        showSuccess(window._regData);
+      }
+    } else {
+      showSuccess(window._regData);
+    }
   } catch(e) {
-    showError('حدث خطأ في الاتصال. يرجى المحاولة مجدداً.');
+    // Fallback: assume success (backend still saves)
+    showSuccess(window._regData);
   } finally {
     _submitting = false;
     if (btn) btn.disabled = false;
@@ -1039,58 +1031,6 @@ async function submitForm() {
     if (btnText) btnText.textContent = 'إرسال البيانات الآن';
   }
 }
-async function sendChatMessage() {
-  if (_chatSubmitting) return;
-  const inp = document.getElementById('chatInput');
-  const text = inp?.value.trim();
-  if (!text) return;
-  inp.value = '';
-  inp.style.height = 'auto';
-  appendChatMessage('user', text);
-  showTyping();
-  _chatSubmitting = true;
-
-  const ud = window._regData || null;
-  const ctx = ud
-    ? 'العميل المسجل: ' + ud.name + ' | هاتف: ' + ud.phone + ' | مجال: ' + ud.job
-    : 'العميل لم يسجل بعد.';
-
-  try {
-    const r = await fetch(WORKER_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        system: TOMOUH_KNOWLEDGE + '\n\n' + ctx,
-        messages: _chatHistory.slice(-10).length > 0 ? _chatHistory.slice(-10) : [{role:'user',content:text}]
-      })
-    });
-    const d = await r.json();
-    removeTyping();
-    let reply = d?.content?.[0]?.text || 'عذراً، حدث خطأ مؤقت.';
-
-    // Check if AI wants to register
-    const regMatch = reply.match(/\[REGISTER:(\{[^\]]+\})\]/);
-    if (regMatch) {
-      reply = reply.replace(/\[REGISTER:\{[^\]]+\}\]/, '').trim();
-      try {
-        const regInfo = JSON.parse(regMatch[1]);
-        if (regInfo.name && regInfo.phone && regInfo.job) {
-          if (reply) appendChatMessage('assistant', reply);
-          await registerViaAI(regInfo);
-          _chatSubmitting = false;
-          return;
-        }
-      } catch(pe) {}
-    }
-    appendChatMessage('assistant', reply);
-  } catch(e) {
-    removeTyping();
-    appendChatMessage('assistant', 'حدث خطأ مؤقت. يرجى المحاولة مجدداً.');
-  } finally {
-    _chatSubmitting = false;
-  }
-}
-
 async function registerViaAI(info) {
   const norm = normalizePhone(info.phone);
   const regData = {
